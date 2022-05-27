@@ -59,16 +59,19 @@
         $('.option').mouseover(function() {
             $(this).css("color", "yellow");
             $(this).css("background-color", "blue");
+            $(this).css("cursor", "pointer");
         });
 
         $('.option').mouseleave(function() {
             $(this).css("color", "black");
             $(this).css("background-color", "white");
+            $(this).css("cursor", "default");
         });
 
         $('.option').click(function(){
             var operationId = $(this).attr("id");
             switch (operationId) {
+                // Get operation for data record.
                 case "operation1":
                     $('#responseContent').empty();
                     $('#responseContent').append("<div>Enter Record ID: <input id='recordId' type='text'>" +
@@ -101,11 +104,12 @@
                         });
                     });
                     break;
+                // Add operation for new data record.
                 case "operation2":
                     $('#responseContent').empty();
-                    $('#responseContent').append("<div>Enter <i>Blood Glucose Level</i>:<input id='bloodGlucoseLevel' type='text'><br>" +
-                        "<div>Enter <i>Carb Intake</i>:<input id='crabIntake' type='text'><br>" +
-                        "<div>Enter <i>Medication Dose</i>:<input id='medicationDose' type='text'><br>" +
+                    $('#responseContent').append("<div><div>Enter <i>Blood Glucose Level</i>:<input id='bloodGlucoseLevel' type='text'></div>" +
+                        "<div>Enter <i>Carb Intake</i>:<input id='carbIntake' type='text'></div>" +
+                        "<div>Enter <i>Medication Dose</i>:<input id='medicationDose' type='text'></div>" +
                         "<button id='submit'>Submit</button><div id='responseId'></div></div>")
                     $('#submit').click(function(){
                         $('#responseId').empty();
@@ -139,6 +143,7 @@
                         });
                     });
                     break;
+                // Update operation for existing data record.
                 case "operation3":
                     $('#responseContent').empty();
                     $('#responseContent').append("<div>Enter Record ID: <input id='recordId' type='text'>" +
@@ -204,6 +209,7 @@
                         });
                     });
                     break;
+                // Delete operation for existing data record.
                 case "operation4":
                     $('#responseContent').empty();
                     $('#responseContent').append("<div>Enter Record ID: <input id='recordId' type='text'>" +
@@ -233,14 +239,130 @@
                         }
                     });
                     break;
+                // "Display all the above data over a (user-specified) time period".
                 case "operation5":
-
+                    $('#responseContent').empty();
+                    $('#responseContent').append("<div><div id='startingDate'>Enter <i>starting date</i>:<input id='startingDateInput' type='date'/></div>" +
+                        "<div id='endingDate'>Enter <i>ending date</i>:<input id='endingDateInput' type='date'/></div>" +
+                        "<button id='submitDates'>Submit</button><div id='responseId'></div></div>");
+                    $('#submitDates').click(function(){
+                        $('#responseId').empty();
+                        var startDate = moment($('#startingDateInput').val());
+                        var endDate = moment($('#endingDateInput').val());
+                        if(startDate.isAfter(endDate)) {
+                            $('#responseId').append("<div style='color:red;'>Starting date should be prior to the ending date.</div>");
+                            return;
+                        } else {
+                            $.ajax({
+                                type : "GET",
+                                dataType : "json",
+                                contentType : "application/json",
+                                url : "http://localhost:8090/DiabetesMonitoringApp_war_exploded/api/diabetes-records/list?startingDate="
+                                    + $('#startingDateInput').val() + "&endingDate=" + $('#endingDateInput').val(),
+                                async : false,
+                                success : function(responseData){
+                                    if(responseData.length === 0) {
+                                        $('#responseId').append("<div style='color:green;'>There are no records in the database for that date range.</div>");
+                                        return;
+                                    }
+                                    var sortedList = responseData.sort((a, b) => (a.diabetesRecordId > b.diabetesRecordId) ? 1 : -1);
+                                    for(var i=0; i<sortedList.length; i++) {
+                                        $('#responseId').append("<div><i>Record ID</i>: <b>" + sortedList[i].diabetesRecordId + "</b>"
+                                            + " | <i>Blood Glucose Level</i>: <b>" + sortedList[i].bloodGlucoseLevel
+                                            + "</b> | <i>Carb Intake</i>: <b>" + sortedList[i].carbIntake
+                                            + "</b> | <i>Medication Dose</i>: <b>" + sortedList[i].medicationDose
+                                            + "</b> | <i>Date Recorted</i>: <b>" + moment(sortedList[i].dateRecorded).format('DD MMM YYYY')
+                                            + "</b></div>");
+                                    }
+                                },
+                                error : function(){}
+                            });
+                        }
+                    });
                     break;
+                // Display the average daily blood glucose level over a (user- specified) period.
                 case "operation6":
-
+                    $('#responseContent').empty();
+                    $('#responseContent').append("<div><div id='startingDate'>Enter <i>starting date</i>:<input id='startingDateInput' type='date'/></div>" +
+                        "<div id='endingDate'>Enter <i>ending date</i>:<input id='endingDateInput' type='date'/></div>" +
+                        "<button id='submitDates'>Submit</button><div id='responseId'></div></div>");
+                    $('#submitDates').click(function(){
+                        $('#responseId').empty();
+                        var startDate = moment($('#startingDateInput').val());
+                        var endDate = moment($('#endingDateInput').val());
+                        if(startDate.isAfter(endDate)) {
+                            $('#responseId').append("<div style='color:red;'>Starting date should be prior to the ending date.</div>");
+                            return;
+                        } else {
+                            $.ajax({
+                                type : "GET",
+                                dataType : "json",
+                                contentType : "application/json",
+                                url : "http://localhost:8090/DiabetesMonitoringApp_war_exploded/api/diabetes-records/averageBloodGlucose?startingDate="
+                                    + $('#startingDateInput').val() + "&endingDate=" + $('#endingDateInput').val(),
+                                async : false,
+                                success : function(responseData){
+                                    if(responseData.length === 0) {
+                                        $('#responseId').append("<div style='color:green;'>There are no records in the database for that date range.</div>");
+                                        return;
+                                    }
+                                    var displayAverage = (date1, date2) => {
+                                        if(date1 === '' || date2 === '') {
+                                            $('#responseId').append("<div style='color:green;'>The average daily blood glucose level for the " +
+                                                "entire database timespan is " + responseData + ".</div>");
+                                        } else {
+                                            $('#responseId').append("<div style='color:green;'>The average daily blood glucose level for the " +
+                                                "given range (" + date1 + " until " + date2 + ") is " + responseData +".</div>");
+                                        }
+                                    };
+                                    displayAverage($('#startingDateInput').val(), $('#endingDateInput').val());
+                                },
+                                error : function(){}
+                            });
+                        }
+                    });
                     break;
+                // Display the average carb intake over a (user-specified) period.
                 case "operation7":
-
+                    $('#responseContent').empty();
+                    $('#responseContent').append("<div><div id='startingDate'>Enter <i>starting date</i>:<input id='startingDateInput' type='date'/></div>" +
+                        "<div id='endingDate'>Enter <i>ending date</i>:<input id='endingDateInput' type='date'/></div>" +
+                        "<button id='submitDates'>Submit</button><div id='responseId'></div></div>");
+                    $('#submitDates').click(function(){
+                        $('#responseId').empty();
+                        var startDate = moment($('#startingDateInput').val());
+                        var endDate = moment($('#endingDateInput').val());
+                        if(startDate.isAfter(endDate)) {
+                            $('#responseId').append("<div style='color:red;'>Starting date should be prior to the ending date.</div>");
+                            return;
+                        } else {
+                            $.ajax({
+                                type : "GET",
+                                dataType : "json",
+                                contentType : "application/json",
+                                url : "http://localhost:8090/DiabetesMonitoringApp_war_exploded/api/diabetes-records/averageCarbIntake?startingDate="
+                                    + $('#startingDateInput').val() + "&endingDate=" + $('#endingDateInput').val(),
+                                async : false,
+                                success : function(responseData){
+                                    if(responseData.length === 0) {
+                                        $('#responseId').append("<div style='color:green;'>There are no records in the database for that date range.</div>");
+                                        return;
+                                    }
+                                    var displayAverage = (date1, date2) => {
+                                        if(date1 === '' || date2 === '') {
+                                            $('#responseId').append("<div style='color:green;'>The average carb intake for the " +
+                                                "entire database timespan is " + responseData + ".</div>");
+                                        } else {
+                                            $('#responseId').append("<div style='color:green;'>The average carb intake for the " +
+                                                "given range (" + date1 + " until " + date2 + ") is " + responseData +".</div>");
+                                        }
+                                    };
+                                    displayAverage($('#startingDateInput').val(), $('#endingDateInput').val());
+                                },
+                                error : function(){}
+                            });
+                        }
+                    });
                     break;
             }
         });
@@ -264,6 +386,41 @@
                 error : function(){}
             });
             return exists;
+        }
+
+        /* "A client-side filter that ensures that all client requests encompass an
+            authentication header with a username and password"
+            Got help from these sources;
+            https://www.ibm.com/docs/en/imdm/11.6?topic=provider-creating-soapui-http-basic-auth-header
+            https://developer.mozilla.org/en-US/docs/web/api/btoa#unicode_strings
+        */
+        $.ajaxPrefilter(function(options, originalOptions, jqXHR){
+            /*
+                Part from the source that I read ->
+                "<...> if you pass a string into btoa() containing characters that occupy more than one byte,
+                you will get an error, because this is not considered binary data <...>"
+                btw in each JavaScript string, each character occupies 2 bytes source ->
+                https://stackoverflow.com/questions/2219526/how-many-bytes-in-a-javascript-string
+                So the steps are the following; convert the desired string to binary and encode it
+                in base64.
+                The value of the header is recommended (by the IBM) to be in the form; username:password
+            */
+            var valueOfHeader = "<%=session.getAttribute("username")%>:<%=session.getAttribute("password")%>"
+            var convertedValue = toBinary(valueOfHeader);
+            jqXHR.setRequestHeader("Authorization", "Basic " + btoa(convertedValue));
+        });
+
+        function toBinary(string) {
+            const codeUnits = new Uint16Array(string.length);
+            for (let i = 0; i < codeUnits.length; i++) {
+                codeUnits[i] = string.charCodeAt(i);
+            }
+            const charCodes = new Uint8Array(codeUnits.buffer);
+            let result = '';
+            for (let i = 0; i < charCodes.byteLength; i++) {
+                result += String.fromCharCode(charCodes[i]);
+            }
+            return result;
         }
 
     });
