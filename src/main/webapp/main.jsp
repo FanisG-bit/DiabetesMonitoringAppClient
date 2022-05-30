@@ -280,7 +280,7 @@
                         }
                     });
                     break;
-                // Display the average daily blood glucose level over a (user- specified) period.
+                // Display the average daily blood glucose level over a (user-specified) period.
                 case "operation6":
                     $('#responseContent').empty();
                     $('#responseContent').append("<div><div id='startingDate'>Enter <i>starting date</i>:<input id='startingDateInput' type='date'/></div>" +
@@ -364,6 +364,95 @@
                         }
                     });
                     break;
+                // Display chart depicting the daily blood glucose level over a user specified period.
+                case "operation8":
+                    $('#responseContent').empty();
+                    $('#responseContent').append("<div><div id='startingDate'>Enter <i>starting date</i>:<input id='startingDateInput' type='date'/></div>" +
+                        "<div id='endingDate'>Enter <i>ending date</i>:<input id='endingDateInput' type='date'/></div>" +
+                        "<button id='submitDates'>Submit</button><div id='responseId'></div></div>");
+                    $('#submitDates').click(function(){
+                        $('#responseId').empty();
+                        var startDate = moment($('#startingDateInput').val());
+                        var endDate = moment($('#endingDateInput').val());
+                        if(startDate.isAfter(endDate)) {
+                            $('#responseId').append("<div style='color:red;'>Starting date should be prior to the ending date.</div>");
+                            return;
+                        } else {
+                            $.ajax({
+                                type : "GET",
+                                url : "http://localhost:8090/DiabetesMonitoringApp_war_exploded/api/diabetes-records/chart?startingDate="
+                                    + $('#startingDateInput').val() + "&endingDate=" + $('#endingDateInput').val() + "&chartCase=" +
+                                    "bloodGlucoseSingle",
+                                async : false,
+                                success : function(responseData){
+                                    $('#responseId').append("<img id='chartImage' src=''>");
+                                    // we retrieve the image as a base64 encoded String, and we display as shown below;
+                                    $('#chartImage').attr('src', "data:image/png;base64," + responseData);
+                                },
+                                error : function(){}
+                            });
+                        }
+                    });
+                    break;
+                // Display chart depicting the carbon intake over a user specified period.
+                case "operation9":
+                    $('#responseContent').empty();
+                    $('#responseContent').append("<div><div id='startingDate'>Enter <i>starting date</i>:<input id='startingDateInput' type='date'/></div>" +
+                        "<div id='endingDate'>Enter <i>ending date</i>:<input id='endingDateInput' type='date'/></div>" +
+                        "<button id='submitDates'>Submit</button><div id='responseId'></div></div>");
+                    $('#submitDates').click(function(){
+                        $('#responseId').empty();
+                        var startDate = moment($('#startingDateInput').val());
+                        var endDate = moment($('#endingDateInput').val());
+                        if(startDate.isAfter(endDate)) {
+                            $('#responseId').append("<div style='color:red;'>Starting date should be prior to the ending date.</div>");
+                            return;
+                        } else {
+                            $.ajax({
+                                type : "GET",
+                                url : "http://localhost:8090/DiabetesMonitoringApp_war_exploded/api/diabetes-records/chart?startingDate="
+                                    + $('#startingDateInput').val() + "&endingDate=" + $('#endingDateInput').val() + "&chartCase=" +
+                                    "carbonIntakeSingle",
+                                async : false,
+                                success : function(responseData){
+                                    $('#responseId').append("<img id='chartImage' src=''>");
+                                    $('#chartImage').attr('src', "data:image/png;base64," + responseData);
+                                },
+                                error : function(){}
+                            });
+                        }
+                    });
+                    break;
+                /* Display chart depicting both (daily blood glucose level and the carbon intake)
+                   over a user specified period. */
+                case "operation10":
+                    $('#responseContent').empty();
+                    $('#responseContent').append("<div><div id='startingDate'>Enter <i>starting date</i>:<input id='startingDateInput' type='date'/></div>" +
+                        "<div id='endingDate'>Enter <i>ending date</i>:<input id='endingDateInput' type='date'/></div>" +
+                        "<button id='submitDates'>Submit</button><div id='responseId'></div></div>");
+                    $('#submitDates').click(function(){
+                        $('#responseId').empty();
+                        var startDate = moment($('#startingDateInput').val());
+                        var endDate = moment($('#endingDateInput').val());
+                        if(startDate.isAfter(endDate)) {
+                            $('#responseId').append("<div style='color:red;'>Starting date should be prior to the ending date.</div>");
+                            return;
+                        } else {
+                            $.ajax({
+                                type : "GET",
+                                url : "http://localhost:8090/DiabetesMonitoringApp_war_exploded/api/diabetes-records/chart?startingDate="
+                                    + $('#startingDateInput').val() + "&endingDate=" + $('#endingDateInput').val() + "&chartCase=" +
+                                    "bothInOne",
+                                async : false,
+                                success : function(responseData){
+                                    $('#responseId').append("<img id='chartImage' src=''>");
+                                    $('#chartImage').attr('src', "data:image/png;base64," + responseData);
+                                },
+                                error : function(){}
+                            });
+                        }
+                    });
+                    break;
             }
         });
 
@@ -438,6 +527,9 @@
                 <div class="option" id="operation5"> Get list of Diabetes Record</div>
                 <div class="option" id="operation6"> Get average of blood glucose level</div>
                 <div class="option" id="operation7"> Get average of carb intake</div>
+                <div class="option" id="operation8"> Line chart (blood glucose level)</div>
+                <div class="option" id="operation9"> Line chart (carbon intake)</div>
+                <div class="option" id="operation10"> Line chart (both in one)</div>
             </div>
         </div>
     </div>

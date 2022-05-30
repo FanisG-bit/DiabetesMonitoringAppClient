@@ -39,6 +39,7 @@
             contentType : "application/json",
             data : JSON.stringify(credentials),
             url : "http://localhost:8090/DiabetesMonitoringApp_war_exploded/api/operations/validateUser",
+            async : false,
             success : function(responseData) {
                 if (responseData === true) {
                     window.location.href = "<%=request.getContextPath()%>/userValidationServlet?username="
@@ -47,7 +48,7 @@
                     console.log('Access Denied');
                 }
             },
-            error : function() {}
+            error : function(error) {}
         });
     });
 </script>
